@@ -3,10 +3,10 @@ unit IBAN_Types;
 interface
 
 uses
-  System.Classes;
+  Classes;
 
 type
-  {$REGION 'Doc'}
+  //{$REGION 'Doc'}
   /////////////////////////////////////////////////////////////////////////////////
   // Doc IBAN:
   //	   https://es.wikipedia.org/wiki/International_Bank_Account_Number
@@ -32,72 +32,63 @@ type
   //    BIC....: ?? Pendiente
   //    SWIFT..: ?? Pendiente
   /////////////////////////////////////////////////////////////////////////////////
-  {$ENDREGION}
+  //{$ENDREGION}
 
   { Info Bancaria de la Cuenta. Generico para UE }
   TrBancoCuentaInfo = record
-  private
-    function AddPrefixPapelIBAN(Value: string): string;
-    function DelPrifixPapelIBAN(Value: string): string;
-
-  public
     IBAN: string; // size(4)                             // Codigo del Pais (ISO 3166-1) + Digito verificador
     CCC: string;  // size(Varia Segun Pais), maxsize(30) // En el caso de España (Entidad + Oficina + DC + Cuenta).
 
     // HELPERs
-    function ToFull(Sep:string=''): string; // IBAN Completo (ES1720852066623456789011) IBAN-ESP: maxsize(24) | IBAN:maxsize(34)
-    function ToFormatPapel: string;
-    function ToFormatElect: string;
-
-    constructor Build(inIBAN, inCCC: string); overload;
-    constructor Build(inFull: string); overload;
-    constructor BuildESP(inIBAN, inEntidad, inOficina, inDC, inCuenta: string);
   end;
 
+  function TrBancoCuentaInfo_ToFull(var Self: TrBancoCuentaInfo; Sep:string=''): string; // IBAN Completo (ES1720852066623456789011) IBAN-ESP: maxsize(24) | IBAN:maxsize(34)
+  function TrBancoCuentaInfo_ToFormatPapel(var Self: TrBancoCuentaInfo): string;
+  function TrBancoCuentaInfo_ToFormatElect(var Self: TrBancoCuentaInfo): string;
+
+  function TrBancoCuentaInfo_Build(inIBAN, inCCC: string):TrBancoCuentaInfo; overload;
+  function TrBancoCuentaInfo_Build(inFull: string): TrBancoCuentaInfo; overload;
+  function BuildESP(inIBAN, inEntidad, inOficina, inDC, inCuenta: string): TrBancoCuentaInfo;
+
+type
   { Info Bancaria del Codigo del Pais, IBAN = "International Bank Account Number" }
   TrBancoIBANInfo = record
-  private
-    function PaisToIBANTable(inPais: string): string;
-    function ToIBAN_Table: string;
-    function GetStrAValidar(inCCC: string): string;
-
-    function IsValid_Pais(inPais: string): Boolean;
-    function IsValid_DC(inCCC: String; Errores: TStringList=nil): Boolean;
-    function IsValid_Base(Errores: TStringList=nil): Boolean;
-  public
     Pais: string;
     DC: string;
 
     // HELPERs
-    function ToIBAN: string;
-
-    constructor Build(inPais, inDC: string); overload;
-    constructor Build(inIBAN: string); overload;
-    constructor BuildEmpty(inPais: string); overload;
-
-    function GetDigitoControl(inCCC: string): string;
-    function IsValid(inCCC: String; Errores: TStringList=nil): Boolean;
   end;
 
+  function TrBancoIBANInfo_ToIBAN(var Self: TrBancoIBANInfo): string;
+
+  function TrBancoIBANInfo_Build(inPais, inDC: string): TrBancoIBANInfo; overload;
+  function TrBancoIBANInfo_Build(inIBAN: string): TrBancoIBANInfo; overload;
+  function TrBancoIBANInfo_BuildEmpty(inPais: string): TrBancoIBANInfo; overload;
+
+  function TrBancoIBANInfo_GetDigitoControl(var Self: TrBancoIBANInfo; inCCC: string): string;
+  function TrBancoIBANInfo_IsValid(var Self: TrBancoIBANInfo; inCCC: String; Errores: TStringList=nil): Boolean;
+
+type
   { Info del CCC = "Código Cuenta Cliente" Española }
   TrBancoCCCInfoESP = record
-  public
     Entidad: string;
     Oficina: string;
     DC: string;
     Cuenta: string;
 
     // HELPERs
-    function ToCCC(Sep:string=''): string;
-    constructor Build(inEntidad, inOficina, inDC, inCuenta: string); overload;
-    constructor Build(inCCC: string); overload;
   end;
+
+  function TrBancoCCCInfoESP_ToCCC(var Self: TrBancoCCCInfoESP; Sep:string=''): string;
+  function TrBancoCCCInfoESP_Build(var Self: TrBancoCCCInfoESP; inEntidad, inOficina, inDC, inCuenta: string): TrBancoCCCInfoESP; overload;
+  function TrBancoCCCInfoESP_Build(var Self: TrBancoCCCInfoESP; inCCC: string): TrBancoCCCInfoESP; overload;
+
 
 implementation
 
 uses
-  System.SysUtils,
-  IBAN.Funcs;
+  SysUtils,
+  Iban_Funcs;
 
 const
   _PrefixFormatPapelIBAN = 'IBAN';
@@ -109,12 +100,25 @@ resourcestring
 
 { TrBancoCuentaInfo }
 
-function TrBancoCuentaInfo.AddPrefixPapelIBAN(Value: string): string;
+function TrBancoCuentaInfo_AddPrefixPapelIBAN(var Self: TrBancoCuentaInfo; Value: string): string; forward;
+function TrBancoCuentaInfo_DelPrifixPapelIBAN(var Self: TrBancoCuentaInfo; Value: string): string; forward;
+
+function TrBancoIBANInfo_PaisToIBANTable(var Self: TrBancoIBANInfo; inPais: string): string; forward;
+function TrBancoIBANInfo_ToIBAN_Table(var Self: TrBancoIBANInfo): string; forward;
+function TrBancoIBANInfo_GetStrAValidar(var Self: TrBancoIBANInfo; inCCC: string): string; forward;
+
+function TrBancoIBANInfo_IsValid_Pais(var Self: TrBancoIBANInfo; inPais: string): Boolean; forward;
+function TrBancoIBANInfo_IsValid_DC(var Self: TrBancoIBANInfo; inCCC: String; Errores: TStringList=nil): Boolean; forward;
+function TrBancoIBANInfo_IsValid_Base(var Self: TrBancoIBANInfo; Errores: TStringList=nil): Boolean; forward;
+
+
+
+function TrBancoCuentaInfo_AddPrefixPapelIBAN(var Self: TrBancoCuentaInfo; Value: string): string;
 begin
   Result := _PrefixFormatPapelIBAN + ' ' + Trim(Value);
 end;
 
-function TrBancoCuentaInfo.DelPrifixPapelIBAN(Value: string): string;
+function TrBancoCuentaInfo_DelPrifixPapelIBAN(var Self: TrBancoCuentaInfo; Value: string): string;
 var
   AValue: string;
   Prefix: string;
@@ -134,48 +138,48 @@ begin
   end;
 end;
 
-function TrBancoCuentaInfo.ToFull(Sep:string=''): string;
+function TrBancoCuentaInfo_ToFull(var Self: TrBancoCuentaInfo; Sep:string=''): string;
 begin
   Result := Trim(Self.IBAN) + Sep +
             Trim(Self.CCC);
 end;
 
-function TrBancoCuentaInfo.ToFormatElect: string;
+function TrBancoCuentaInfo_ToFormatElect(var Self: TrBancoCuentaInfo): string;
 begin
-  Result := Self.ToFull;
+  Result := TrBancoCuentaInfo_ToFull(Self);
 end;
 
-function TrBancoCuentaInfo.ToFormatPapel: string;
+function TrBancoCuentaInfo_ToFormatPapel(var Self: TrBancoCuentaInfo): string;
 begin
   // Add Prefix IBAN
-  Result := Self.AddPrefixPapelIBAN( Self.ToFull(' ') );
+  Result := TrBancoCuentaInfo_AddPrefixPapelIBAN(Self, TrBancoCuentaInfo_ToFull(Self, ' ') );
 end;
 
-constructor TrBancoCuentaInfo.Build(inIBAN, inCCC: string);
+function TrBancoCuentaInfo_Build(inIBAN, inCCC: string): TrBancoCuentaInfo;
 begin
-  Self.IBAN := inIBAN;
-  Self.CCC  := inCCC;
+  Result.IBAN := inIBAN;
+  Result.CCC  := inCCC;
 end;
 
-constructor TrBancoCuentaInfo.Build(inFull: string);
+function TrBancoCuentaInfo_Build(inFull: string): TrBancoCuentaInfo;
 var
   Value: string;
 begin
   // Clean
   Value := inFull;
-  Value := Self.DelPrifixPapelIBAN(Value);
+  Value := TrBancoCuentaInfo_DelPrifixPapelIBAN(Result, Value);
   Value := TIBANFuncs.GetAlphaNumericsOnly(Value);
 
   // Separa
-  Self.IBAN := Copy(Value, 1, 4);
-  Self.CCC  := Copy(Value, 5, Length(Value)); //El restante es el CCC
+  Result.IBAN := Copy(Value, 1, 4);
+  Result.CCC  := Copy(Value, 5, Length(Value)); //El restante es el CCC
 end;
 
-constructor TrBancoCuentaInfo.BuildESP(inIBAN, inEntidad, inOficina, inDC, inCuenta: string);
+function TrBancoCuentaInfo_BuildESP(inIBAN, inEntidad, inOficina, inDC, inCuenta: string): TrBancoCuentaInfo;
 var
   CCCFull: string;
 begin
-  CCCFull := TrBancoCCCInfoESP.Build(inEntidad, inOficina, inDC, inCuenta).ToCCC;
+  CCCFull := TrBancoCCCInfoESP_ToCCC(TrBancoCCCInfoESP_Build(Result, inEntidad, inOficina, inDC, inCuenta));
   Self.Build(inIBAN, CCCFull);
 end;
 
