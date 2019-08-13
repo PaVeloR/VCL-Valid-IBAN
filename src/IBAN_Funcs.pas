@@ -1,9 +1,9 @@
 unit IBAN_Funcs;
 
-interface w
+interface
 
 uses
-  System.Classes;
+  Classes;
 
 type
   // Funciones Genericas
@@ -20,7 +20,7 @@ type
 implementation
 
 uses
-  System.SysUtils;
+  SysUtils;
 
 { TIBANFuncs }
 
@@ -28,7 +28,7 @@ class function TIBANFuncs.GetNumbersOnly(value: string): string;
 
   function IsNumber(Caracter: Char): Boolean;
   begin
-     Result := CharInSet(Caracter, ['0'..'9']);
+     Result := Caracter in ['0'..'9'];
   end;
 
   var
@@ -48,9 +48,9 @@ class function TIBANFuncs.GetAlphaNumericsOnly(value: string): string;
 
   function IsAlphaNumeric(Caracter: Char): Boolean;
   begin
-     Result := CharInSet(Caracter, ['A'..'Z']) or
-               CharInSet(Caracter, ['a'..'z']) or
-               CharInSet(Caracter, ['0'..'9']);
+     Result := (Caracter in ['A'..'Z']) or
+               (Caracter in ['a'..'z']) or
+               (Caracter in ['0'..'9']);
   end;
 
 var

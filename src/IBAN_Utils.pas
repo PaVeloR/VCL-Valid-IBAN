@@ -3,7 +3,7 @@ unit IBAN_Utils;
 interface
 
 uses
-  System.Classes;
+  Classes;
 
 type
   TIBANUtils = class
@@ -18,8 +18,8 @@ type
 implementation
 
 uses
-  System.SysUtils,
-  IBAN.Types;
+  SysUtils,
+  Iban_Types;
 
 { TIBANUtils }
 
@@ -27,10 +27,10 @@ class function TIBANUtils.GetIBAN(inSiglaPais, inCCC: string): string;
 var
   IBAN: TrBancoIBANInfo;
 begin
-  IBAN.BuildEmpty(inSiglaPais);
-  IBAN.DC := IBAN.GetDigitoControl(inCCC);
+  IBAN := TrBancoIBANInfo_BuildEmpty(inSiglaPais);
+  IBAN.DC := TrBancoIBANInfo_GetDigitoControl(IBan, inCCC);
 
-  Result := IBAN.ToIBAN;
+  Result := TrBancoIBANInfo_ToIBAN(IBan);
 end;
 
 class function TIBANUtils.IsValidIBAN(inFull: String; Errores: TStringList=nil): Boolean;
@@ -39,13 +39,13 @@ var
   IBAN: TrBancoIBANInfo;
 begin
   // Descomponemos la cuenta
-  Cuenta.Build(inFull);
+  Cuenta := TrBancoCuentaInfo_Build(inFull);
 
   // Descomponemos el IBAN
-  IBAN.Build(Cuenta.IBAN);
+  IBAN := TrBancoIBANInfo_Build(Cuenta.IBAN);
 
   // Valida
-  Result := IBAN.IsValid(Cuenta.CCC, Errores);
+  Result := TrBancoIBANInfo_IsValid(IBAN, Cuenta.CCC, Errores);
 end;
 
 end.
