@@ -48,7 +48,7 @@ type
 
   function TrBancoCuentaInfo_Build(inIBAN, inCCC: string):TrBancoCuentaInfo; overload;
   function TrBancoCuentaInfo_Build(inFull: string): TrBancoCuentaInfo; overload;
-  function BuildESP(inIBAN, inEntidad, inOficina, inDC, inCuenta: string): TrBancoCuentaInfo;
+  function TrBancoCuentaInfo_BuildESP(inIBAN, inEntidad, inOficina, inDC, inCuenta: string): TrBancoCuentaInfo;
 
 type
   { Info Bancaria del Codigo del Pais, IBAN = "International Bank Account Number" }
@@ -80,8 +80,8 @@ type
   end;
 
   function TrBancoCCCInfoESP_ToCCC(var Self: TrBancoCCCInfoESP; Sep:string=''): string;
-  function TrBancoCCCInfoESP_Build(var Self: TrBancoCCCInfoESP; inEntidad, inOficina, inDC, inCuenta: string): TrBancoCCCInfoESP; overload;
-  function TrBancoCCCInfoESP_Build(var Self: TrBancoCCCInfoESP; inCCC: string): TrBancoCCCInfoESP; overload;
+  function TrBancoCCCInfoESP_Build(inEntidad, inOficina, inDC, inCuenta: string): TrBancoCCCInfoESP; overload;
+  function TrBancoCCCInfoESP_Build(inCCC: string): TrBancoCCCInfoESP; overload;
 
 
 implementation
@@ -101,7 +101,7 @@ resourcestring
 { TrBancoCuentaInfo }
 
 function TrBancoCuentaInfo_AddPrefixPapelIBAN(var Self: TrBancoCuentaInfo; Value: string): string; forward;
-function TrBancoCuentaInfo_DelPrifixPapelIBAN(var Self: TrBancoCuentaInfo; Value: string): string; forward;
+function TrBancoCuentaInfo_DelPrifixPapelIBAN({var Self: TrBancoCuentaInfo; }Value: string): string; forward;
 
 function TrBancoIBANInfo_PaisToIBANTable(var Self: TrBancoIBANInfo; inPais: string): string; forward;
 function TrBancoIBANInfo_ToIBAN_Table(var Self: TrBancoIBANInfo): string; forward;
@@ -118,7 +118,7 @@ begin
   Result := _PrefixFormatPapelIBAN + ' ' + Trim(Value);
 end;
 
-function TrBancoCuentaInfo_DelPrifixPapelIBAN(var Self: TrBancoCuentaInfo; Value: string): string;
+function TrBancoCuentaInfo_DelPrifixPapelIBAN({var Self: TrBancoCuentaInfo; }Value: string): string;
 var
   AValue: string;
   Prefix: string;
@@ -167,7 +167,7 @@ var
 begin
   // Clean
   Value := inFull;
-  Value := TrBancoCuentaInfo_DelPrifixPapelIBAN(Result, Value);
+  Value := TrBancoCuentaInfo_DelPrifixPapelIBAN(Value);
   Value := TIBANFuncs.GetAlphaNumericsOnly(Value);
 
   // Separa
@@ -178,14 +178,16 @@ end;
 function TrBancoCuentaInfo_BuildESP(inIBAN, inEntidad, inOficina, inDC, inCuenta: string): TrBancoCuentaInfo;
 var
   CCCFull: string;
+  tmp: TrBancoCCCInfoESP;
 begin
-  CCCFull := TrBancoCCCInfoESP_ToCCC(TrBancoCCCInfoESP_Build(Result, inEntidad, inOficina, inDC, inCuenta));
-  Self.Build(inIBAN, CCCFull);
+  tmp := TrBancoCCCInfoESP_Build(inEntidad, inOficina, inDC, inCuenta);
+  CCCFull := TrBancoCCCInfoESP_ToCCC(tmp);
+  Result := TrBancoCuentaInfo_Build(inIBAN, CCCFull);
 end;
 
 { TrBancoIBANInfo }
 
-function TrBancoIBANInfo.PaisToIBANTable(inPais: string): string;
+function TrBancoIBANInfo_PaisToIBANTable(var Self: TrBancoIBANInfo; inPais: string): string;
 
   function CharToDigitTable(const Value: Char): string;
   const
@@ -200,7 +202,7 @@ function TrBancoIBANInfo.PaisToIBANTable(inPais: string): string;
     ////////////////////////////////////////////////////////////////////////////////////////
     Result := Value;
 
-    if CharInSet(Value, ['A'..'Z']) then
+    if (Value in ['A'..'Z']) then
     begin
        iValue := (byte(Value) - byte(Initial_A)) + 10;
        result := IntToStr(iValue);
@@ -220,48 +222,48 @@ begin
   end;
 end;
 
-function TrBancoIBANInfo.ToIBAN: string;
+function TrBancoIBANInfo_ToIBAN(var Self: TrBancoIBANInfo): string;
 begin
   Result := Self.Pais + Self.DC;
 end;
 
-function TrBancoIBANInfo.ToIBAN_Table: string;
+function TrBancoIBANInfo_ToIBAN_Table(var Self: TrBancoIBANInfo): string;
 begin
-  Result := Self.PaisToIBANTable(Self.Pais) + Self.DC;
+  Result := TrBancoIBANInfo_PaisToIBANTable(Self, Self.Pais) + Self.DC;
 end;
 
-constructor TrBancoIBANInfo.Build(inPais, inDC: string);
+function TrBancoIBANInfo_Build(inPais, inDC: string): TrBancoIBANInfo;
 begin
-  Self.Pais := inPais;
-  Self.DC   := inDC;
+  Result.Pais := inPais;
+  Result.DC   := inDC;
 end;
 
-constructor TrBancoIBANInfo.Build(inIBAN: string);
+function TrBancoIBANInfo_Build(inIBAN: string): TrBancoIBANInfo;
 begin
   // Ej: "ES78"
   inIBAN := Trim(inIBAN);
-  Self.Pais := Copy(inIBAN, 1, 2);
-  Self.DC   := Copy(inIBAN, 3, 4);
+  Result.Pais := Copy(inIBAN, 1, 2);
+  Result.DC   := Copy(inIBAN, 3, 4);
 end;
 
-constructor TrBancoIBANInfo.BuildEmpty(inPais: string);
+function TrBancoIBANInfo_BuildEmpty(inPais: string): TrBancoIBANInfo;
 begin
-  Self.Pais := inPais;
-  Self.DC   := '00';
+  Result.Pais := inPais;
+  Result.DC   := '00';
 end;
 
-function TrBancoIBANInfo.GetStrAValidar(inCCC: string): string;
+function TrBancoIBANInfo_GetStrAValidar(var Self: TrBancoIBANInfo; inCCC: string): string;
 begin
-  Result := Trim(inCCC) + Self.ToIBAN_Table;
+  Result := Trim(inCCC) + TrBancoIBANInfo_ToIBAN_Table(Self);
 end;
 
-function TrBancoIBANInfo.GetDigitoControl(inCCC: string): string;
+function TrBancoIBANInfo_GetDigitoControl(var Self: TrBancoIBANInfo; inCCC: string): string;
 var
   AValidar: string;
   iValue: Integer;
   NewDV: Integer;
 begin
-  {$REGION 'Doc_Calc_DC_IBAN'}
+  //{$REGION 'Doc_Calc_DC_IBAN'}
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /// Calculo del DC del IBAN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -282,9 +284,9 @@ begin
   //   5) 98 - 9 = 89
   //      Al final quedaria asi: DE89 37040044 0532013000
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  {$ENDREGION}
+  //{$ENDREGION}
 
-  AValidar := Self.GetStrAValidar(inCCC);
+  AValidar := TrBancoIBANInfo_GetStrAValidar(Self, inCCC);
   iValue   := TIBANFuncs.Mod97(AValidar);
   NewDV    := 98 - iValue;
 
@@ -294,12 +296,12 @@ begin
      Result := IntToStr(NewDV);
 end;
 
-function TrBancoIBANInfo.IsValid_DC(inCCC: String; Errores: TStringList=nil): Boolean;
+function TrBancoIBANInfo_IsValid_DC(var Self: TrBancoIBANInfo; inCCC: String; Errores: TStringList=nil): Boolean;
 var
   AValidar: string;
 begin
   // Generamos la linea para validar
-  AValidar := Self.GetStrAValidar(inCCC);
+  AValidar := TrBancoIBANInfo_GetStrAValidar(Self, inCCC);
 
   // Valida
   Result := TIBANFuncs.Mod97(AValidar) = 1;
@@ -308,12 +310,12 @@ begin
      TIBANFuncs.AddNotNil(IBANInvalidoStr, Errores);
 end;
 
-function TrBancoIBANInfo.IsValid_Pais(inPais: string): Boolean;
+function TrBancoIBANInfo_IsValid_Pais(var Self: TrBancoIBANInfo; inPais: string): Boolean;
 
   function IsStringOnly(Caracter: Char): Boolean;
   begin
-     Result := CharInSet(Caracter, ['A'..'Z']) or
-               CharInSet(Caracter, ['a'..'z']);
+     Result := (Caracter in ['A'..'Z']) or
+               (Caracter in ['a'..'z']);
   end;
 
 var
@@ -330,27 +332,27 @@ begin
   end;
 end;
 
-function TrBancoIBANInfo.IsValid_Base(Errores: TStringList=nil): Boolean;
+function TrBancoIBANInfo_IsValid_Base(var Self: TrBancoIBANInfo; Errores: TStringList): Boolean;
 begin
   Result := True;
 
-  if (Self.Pais.IsEmpty) or (Self.Pais.Length < 2) or (not Self.IsValid_Pais(Self.Pais)) then // Tiene que ser solo letras
+  if (Self.Pais = '') or (Length(Self.Pais) < 2) or (not TrBancoIBANInfo_IsValid_Pais(Self, Self.Pais)) then // Tiene que ser solo letras
   begin
      TIBANFuncs.AddNotNil(PaisIBANInvalidoStr, Errores);
      Result := False;
   end;
 
-  if (Self.DC.IsEmpty) or (Self.DC.Length < 2) or (StrToIntDef(Self.DC, -1) = -1) then //Tiene que ser Integer
+  if (Self.DC = '') or (Length(Self.DC) < 2) or (StrToIntDef(Self.DC, -1) = -1) then //Tiene que ser Integer
   begin
      TIBANFuncs.AddNotNil(DcIBANInvalidoStr, Errores);
      Result := False;
   end;
 end;
 
-function TrBancoIBANInfo.IsValid(inCCC: String; Errores: TStringList=nil): Boolean;
+function TrBancoIBANInfo_IsValid(var Self: TrBancoIBANInfo; inCCC: String; Errores: TStringList=nil): Boolean;
 begin
-  if Self.IsValid_Base(Errores) and
-     Self.IsValid_DC(inCCC, Errores) then
+  if TrBancoIBANInfo_IsValid_Base(Self, Errores) and
+     TrBancoIBANInfo_IsValid_DC(Self, inCCC, Errores) then
   begin
      Result := True;
   end
@@ -362,7 +364,7 @@ end;
 
 { TrBancoCCCInfoESP }
 
-function TrBancoCCCInfoESP.ToCCC(Sep:string=''): string;
+function TrBancoCCCInfoESP_ToCCC(var Self: TrBancoCCCInfoESP; Sep:string=''): string;
 begin
   Result := Self.Entidad + Sep +
             Self.Oficina + Sep +
@@ -370,24 +372,24 @@ begin
             Self.Cuenta;
 end;
 
-constructor TrBancoCCCInfoESP.Build(inEntidad, inOficina, inDC, inCuenta: string);
+function TrBancoCCCInfoESP_Build(inEntidad, inOficina, inDC, inCuenta: string): TrBancoCCCInfoESP;
 begin
-  Self.Entidad := inEntidad;
-  Self.Oficina := inOficina;
-  Self.DC      := inDC;
-  Self.Cuenta  := inCuenta;
+  Result.Entidad := inEntidad;
+  Result.Oficina := inOficina;
+  Result.DC      := inDC;
+  Result.Cuenta  := inCuenta;
 end;
 
-constructor TrBancoCCCInfoESP.Build(inCCC: string);
+function TrBancoCCCInfoESP_Build(inCCC: string): TrBancoCCCInfoESP;
 var
   Value: string;
 begin
   Value := TIBANFuncs.GetNumbersOnly(inCCC);
 
-  Self.Entidad := Copy(Value, 1 , 4);
-  Self.Oficina := Copy(Value, 5 , 4);
-  Self.DC      := Copy(Value, 9 , 2);
-  Self.Cuenta  := Copy(Value, 11, Length(Value));
+  Result.Entidad := Copy(Value, 1 , 4);
+  Result.Oficina := Copy(Value, 5 , 4);
+  Result.DC      := Copy(Value, 9 , 2);
+  Result.Cuenta  := Copy(Value, 11, Length(Value));
 end;
 
 end.
