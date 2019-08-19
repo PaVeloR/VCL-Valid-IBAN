@@ -5,17 +5,21 @@ interface
 uses
   Classes;
 
-type
-  TIBANUtils = class
-  public
-    // Genera un IBAN para una CCC. EJ: "ES17"
-    class function GetIBAN(inSiglaPais, inCCC: string): string;
+function GetIBAN(inSiglaPais, inCCC: AnsiString): AnsiString;
 
-    class function GetUAIBan(Mfo: string; Acc: string): string;
+//UA
+function GetIBanFromUAAccount(Mfo: AnsiString; Acc: AnsiString): AnsiString;
+
+type
+  TUABankAccount = record
+    MFO: AnsiString;
+    Account: AnsiString;
+  end;
+
+function GetUaAccountFromIBan(aValue: AnsiString): TUABankAccount;
 
     // Valida un IBAN (Generico todos los paises UE)
-    class function IsValidIBAN(inFull: String; Errores: TStringList=nil): Boolean;
-  end;
+function IsValidIBAN(inFull: AnsiString; Errores: TStrings=nil): Boolean;
 
 implementation
 
@@ -25,7 +29,7 @@ uses
 
 { TIBANUtils }
 
-class function TIBANUtils.GetIBAN(inSiglaPais, inCCC: string): string;
+function GetIBAN(inSiglaPais, inCCC: AnsiString): AnsiString;
 var
   IBAN: TrBancoIBANInfo;
 begin
@@ -35,9 +39,9 @@ begin
   Result := TrBancoIBANInfo_ToIBAN(IBan);
 end;
 
-class function TIBANUtils.GetUAIBan(Mfo, Acc: string): string;
+function GetIBanFromUAAccount(Mfo, Acc: AnsiString): AnsiString;
 var
-  S: string;
+  S: AnsiString;
 begin
   SetLength(S, 25);
   FillChar(S[1], 25, '0');
@@ -45,10 +49,33 @@ begin
     Move(Mfo[1], S[1], Length(Mfo));
   if Length(Acc) > 0 then
     Move(Acc[1], S[Length(S) - Length(Acc) + 1], Length(Acc));
-  Result := TIBANUtils.GetIBAN('UA', S) + S;
+  Result := GetIBAN('UA', S) + S;
 end;
 
-class function TIBANUtils.IsValidIBAN(inFull: String; Errores: TStringList=nil): Boolean;
+function GetUaAccountFromIBan(aValue: AnsiString): TUABankAccount;
+var
+  s: AnsiString;
+  i: integer;
+begin
+  aValue := Trim(aValue);
+  if UpperCase(Copy(aValue, 1, 2)) <> 'UA' then
+    raise Exception.Create('GetUaAccountFromIBan: IBan is not Ukrainian');
+  if Length(aValue) <> 29 then
+    raise Exception.Create('GetUaAccountFromIBan: Invalid Ukrainian IBan Length');
+
+  if not IsValidIBAN(aValue) then
+    raise Exception.Create('GetUaAccountFromIBan: Invalid IBan checksum');
+
+  s := copy(aValue, 5, Length(aValue));
+  Result.MFO := copy(aValue, 5, 6);
+  for i := 11 to Length(aValue) do
+    if aValue[i] <> '0' then begin
+      Result.Account := copy(aValue, i, Length(aValue));
+      break;
+    end;
+end;
+
+function IsValidIBAN(inFull: AnsiString; Errores: TStrings=nil): Boolean;
 var
   Cuenta: TrBancoCuentaInfo;
   IBAN: TrBancoIBANInfo;

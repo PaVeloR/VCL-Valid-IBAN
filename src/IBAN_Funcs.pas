@@ -14,7 +14,7 @@ type
 
     class function Mod97(value: String): Integer;
 
-    class procedure AddNotNil(value: string; Lista: TStringList=nil);
+    class procedure AddNotNil(value: string; Lista: TStrings=nil);
   end;
 
 implementation
@@ -76,7 +76,7 @@ begin
   end;
 end;
 
-class procedure TIBANFuncs.AddNotNil(value: string; Lista: TStringList=nil);
+class procedure TIBANFuncs.AddNotNil(value: string; Lista: TStrings=nil);
 begin
   if Assigned(Lista) then
      Lista.Add(value);

@@ -66,7 +66,7 @@ type
   function TrBancoIBANInfo_BuildEmpty(inPais: string): TrBancoIBANInfo; overload;
 
   function TrBancoIBANInfo_GetDigitoControl(var Self: TrBancoIBANInfo; inCCC: string): string;
-  function TrBancoIBANInfo_IsValid(var Self: TrBancoIBANInfo; inCCC: String; Errores: TStringList=nil): Boolean;
+  function TrBancoIBANInfo_IsValid(var Self: TrBancoIBANInfo; inCCC: String; Errores: TStrings=nil): Boolean;
 
 type
   { Info del CCC = "Código Cuenta Cliente" Española }
@@ -108,8 +108,8 @@ function TrBancoIBANInfo_ToIBAN_Table(var Self: TrBancoIBANInfo): string; forwar
 function TrBancoIBANInfo_GetStrAValidar(var Self: TrBancoIBANInfo; inCCC: string): string; forward;
 
 function TrBancoIBANInfo_IsValid_Pais(var Self: TrBancoIBANInfo; inPais: string): Boolean; forward;
-function TrBancoIBANInfo_IsValid_DC(var Self: TrBancoIBANInfo; inCCC: String; Errores: TStringList=nil): Boolean; forward;
-function TrBancoIBANInfo_IsValid_Base(var Self: TrBancoIBANInfo; Errores: TStringList=nil): Boolean; forward;
+function TrBancoIBANInfo_IsValid_DC(var Self: TrBancoIBANInfo; inCCC: String; Errores: TStrings=nil): Boolean; forward;
+function TrBancoIBANInfo_IsValid_Base(var Self: TrBancoIBANInfo; Errores: TStrings=nil): Boolean; forward;
 
 
 
@@ -296,7 +296,7 @@ begin
      Result := IntToStr(NewDV);
 end;
 
-function TrBancoIBANInfo_IsValid_DC(var Self: TrBancoIBANInfo; inCCC: String; Errores: TStringList=nil): Boolean;
+function TrBancoIBANInfo_IsValid_DC(var Self: TrBancoIBANInfo; inCCC: String; Errores: TStrings=nil): Boolean;
 var
   AValidar: string;
 begin
@@ -332,7 +332,7 @@ begin
   end;
 end;
 
-function TrBancoIBANInfo_IsValid_Base(var Self: TrBancoIBANInfo; Errores: TStringList): Boolean;
+function TrBancoIBANInfo_IsValid_Base(var Self: TrBancoIBANInfo; Errores: TStrings): Boolean;
 begin
   Result := True;
 
@@ -349,7 +349,7 @@ begin
   end;
 end;
 
-function TrBancoIBANInfo_IsValid(var Self: TrBancoIBANInfo; inCCC: String; Errores: TStringList=nil): Boolean;
+function TrBancoIBANInfo_IsValid(var Self: TrBancoIBANInfo; inCCC: String; Errores: TStrings=nil): Boolean;
 begin
   if TrBancoIBANInfo_IsValid_Base(Self, Errores) and
      TrBancoIBANInfo_IsValid_DC(Self, inCCC, Errores) then
